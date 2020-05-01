@@ -31,7 +31,6 @@ exports.signup = async (req, res, next) => {
 
     respFind = await User_Auth.findOne({ where: { email: email } });
     if (respFind) {
-<<<<<<< HEAD
       res
         .status(200)
         .json({
@@ -41,14 +40,6 @@ exports.signup = async (req, res, next) => {
           data: { respFind },
         });
       console.log('respFind', respFind);
-=======
-      res.status(200).json({
-        status: 200,
-        received: req.body,
-        message: 'Email address already exists!',
-        data: { respFind },
-      });
->>>>>>> 1cd514a1279c980616dd3aeb8d1fbcd0ce411ce1
     }
     if (!respFind) {
       const newUser_Auth = new User_Auth({
@@ -74,7 +65,6 @@ exports.signup = async (req, res, next) => {
       });
       console.log('respSave', respSave);
     }
-<<<<<<< HEAD
     // const token = jwt.sign(
     //   {
     //     email: loadedUser.email,
@@ -83,17 +73,6 @@ exports.signup = async (req, res, next) => {
     //   'somesupersecretsecret',
     //   { expiresIn: '1h' }
     // );
-=======
-    console.log('respFind', respFind);
-    console.log('respSave', respSave);
-
-    res.json({
-      status: 201,
-      received: req.body,
-      message: 'User created!',
-      data: { respFind, respSave },
-    });
->>>>>>> 1cd514a1279c980616dd3aeb8d1fbcd0ce411ce1
   } catch (error) {
     if (!error.statusCode) {
       error.statusCode = 500;
