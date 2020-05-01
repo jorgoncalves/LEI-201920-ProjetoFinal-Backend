@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const User_Auth = require('../models/User_Auth');
+const User_Info = require('../models/User_Info');
 
 exports.getLogin = (req, res, next) => {
   res.send('Hello');
@@ -38,17 +39,32 @@ exports.signup = async (req, res, next) => {
           message: 'Email address already exists!',
           data: { respFind },
         });
+      console.log('respFind', respFind);
     }
     if (!respFind) {
-      const newUser = new User_Auth({
+      const newUser_Auth = new User_Auth({
         email: email,
         password: hashedPw,
         is_active: true,
       });
-      respSave = await newUser.save();
+      respSave = await newUser_Auth.save();
+
+      const newUser_Info = new User_Info({
+        userID: respSave.userID,
+        name: req.body.name,
+        email: email,
+        country: req.body.country
+      });
+      respSave_Info = await newUser_Info.save();
+
+      res.json({
+        status: 201,
+        received: req.body,
+        message: 'User created!',
+        data: { respSave, respSave_Info},
+      });
+      console.log('respSave', respSave);
     }
-    console.log('respFind', respFind);
-    console.log('respSave', respSave);
     // const token = jwt.sign(
     //   {
     //     email: loadedUser.email,
@@ -57,12 +73,6 @@ exports.signup = async (req, res, next) => {
     //   'somesupersecretsecret',
     //   { expiresIn: '1h' }
     // );
-    res.json({
-      status: 201,
-      received: req.body,
-      message: 'User created!',
-      data: { respFind, respSave },
-    });
   } catch (error) {
     if (!error.statusCode) {
       error.statusCode = 500;
