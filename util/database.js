@@ -4,7 +4,13 @@ const sequelize = new Sequelize(
   'postgres://hnztfhcn:AFhZ8pcb4uBd6cP32B4CA9jDk6lbgV9y@kandula.db.elephantsql.com:5432/hnztfhcn',
   {
     logging: false,
-    timezone: 'gmt'
+    dialectOptions: {
+      useUTC: false, //for reading from database
+      dateStrings: true,
+      typeCast: true,
+      timezone: 'Europe/Lisbon',
+    },
+    timezone: 'Europe/Lisbon',
   }
 );
 
