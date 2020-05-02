@@ -31,7 +31,7 @@ app.use((error, req, res, next) => {
   const status = error.statusCode || 500;
   const message = error.message;
   const data = error.data;
-  res.status(status).json({ message: message, data: data });
+  res.status(status).json({ status: status, message: message, data: data });
 });
 
 const serve = app.listen(8080);
