@@ -22,7 +22,6 @@ const User_Info = sequelize.define(
       allowNull: false,
       defaultValue: "{}",
     },
-    email: { type: Sequelize.STRING, allowNull: false, unique: true },
     created_on: {
       type: "TIMESTAMP WITHOUT TIME ZONE",
       allowNull: false,
