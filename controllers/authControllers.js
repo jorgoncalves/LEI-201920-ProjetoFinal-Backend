@@ -4,6 +4,15 @@ const jwt = require('jsonwebtoken');
 
 const User_Auth = require('../models/User_Auth');
 const User_Info = require('../models/User_Info');
+//PARA REMOVER MAIS TARDE
+const Department = require('../models/Department');               
+const Department_User = require('../models/Department_User');     
+const Document_Index = require("../models/Document_Index");
+const Record = require("../models/Records");
+const Attachments = require("../models/Attachments");
+const Commits_Alteration_History = require("../models/Commits_Alteration_History");
+const Department_Doc = require("../models/Department_Doc");
+const User_Document_permissions = require("../models/User_Document_permissions");
 
 const { catchAsync } = require('../util/catchAsync');
 
@@ -45,7 +54,6 @@ exports.signup = catchAsync(async (req, res, next) => {
     const newUser_Auth = new User_Auth({
       email: email,
       password: hashedPw,
-      is_active: true,
     });
     respSave = await newUser_Auth.save();
 
