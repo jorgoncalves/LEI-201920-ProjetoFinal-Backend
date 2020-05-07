@@ -1,12 +1,12 @@
 const express = require('express');
 const sequelize = require('./util/database');
 
-const User_Auth = require('./models/User_Auth');
 
 const app = express();
 
 const authRoutes = require('./routes/authRoutes');
 const isAuth = require('./middleware/isAuth');
+const departRoutes = require('./routes/departRoutes');
 // const homeRoutes = require('./routes/homeRoutes');
 
 sequelize.sync();
@@ -24,6 +24,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/auth', authRoutes);
+app.use('/depart', departRoutes);
 // app.use('/home', isAuth,homeRoutes);
 
 app.use((error, req, res, next) => {
