@@ -5,8 +5,8 @@ const jwt = require('jsonwebtoken');
 const User_Auth = require('../models/User_Auth');
 const User_Info = require('../models/User_Info');
 //PARA REMOVER MAIS TARDE
-const Department = require('../models/Department');               
-const Department_User = require('../models/Department_User');     
+const Department = require('../models/Department');
+const Department_User = require('../models/Department_User');
 const Document_Index = require("../models/Document_Index");
 const Record = require("../models/Records");
 const Attachments = require("../models/Attachments");
