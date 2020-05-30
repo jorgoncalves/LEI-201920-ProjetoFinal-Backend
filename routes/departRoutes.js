@@ -22,4 +22,8 @@ router.post(
   departController.createDepart
 );
 
+router.get('/:id', departController.getDepartUsers);
+
+router.post('/:id/insertUser', departController.insertUser_Depart);
+
 module.exports = router;
