@@ -7,7 +7,20 @@ const router = express.Router();
 
 router.get('/', authControllers.getLogin);
 
-router.post('/', authControllers.login);
+router.post(
+  '/login',
+  [
+    check('email')
+      .isEmail()
+      .withMessage('Please enter a valid email.')
+      .normalizeEmail(),
+    check('password')
+      .trim()
+      .isLength({ min: 5 })
+      .withMessage('Please enter a valid password'),
+  ],
+  authControllers.login
+);
 
 router.post(
   '/signup',
@@ -23,8 +36,5 @@ router.post(
   ],
   authControllers.signup
 );
-
-//Get user info
-router.get('/:id', authControllers.getUser);
 
 module.exports = router;

@@ -2,6 +2,8 @@ const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const { jwtSecret } = require('./jwtToken');
+
 const User_Auth = require('../models/User_Auth');
 const User_Info = require('../models/User_Info');
 //PARA REMOVER MAIS TARDE
@@ -68,60 +70,65 @@ exports.signup = catchAsync(async (req, res, next) => {
 
     res.json({
       status: 201,
-      received: req.body,
-      message: 'User created!',
-      data: { respSave, respSave_Info },
+      message: 'User signedup!',
+      data: {
+        token: createToken(
+          respSave_Info.userID.toString(),
+          respSave_Info.email,
+          respSave_Info.name
+        ),
+      },
     });
-    console.log('respSave', respSave);
+    console.log('respSave', respSave_Info);
   }
-  // const token = jwt.sign(
-  //   {
-  //     email: loadedUser.email,
-  //     userId: loadedUser._id.toString()
-  //   },
-  //   'somesupersecretsecret',
-  //   { expiresIn: '1h' }
-  // );
 });
 
-exports.login = (req, res, next) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  console.log('email - ', email);
-  console.log('password - ', password);
-  // const token = jwt.sign(
-  //   {
-  //     email: loadedUser.email,
-  //     userId: loadedUser._id.toString()
-  //   },
-  //   'somesupersecretsecret',
-  //   { expiresIn: '9h' }
-  // );
-  res.send('PostLogin');
+exports.login = catchAsync(async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = new Error('Validation failed.');
+    error.statusCode = 422;
+    error.data = errors.array();
+    throw error;
+  }
+  const { email, password } = req.body;
+  console.log('Email - ', email);
+  console.log('Password - ', password);
+
+  const user = await User_Auth.findOne({ where: { email: email } });
+  console.log(user);
+
+  if (!user) {
+    const error = new Error('Could not find a user with that email.');
+    error.statusCode = 401;
+    throw error;
+  }
+  const isEqual = await bcrypt.compare(password, user.password);
+
+  if (!isEqual) {
+    const error = new Error('Wrong password!!');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  res.status(200).json({
+    status: 201,
+    message: 'User loggedin!',
+    data: {
+      token: createToken(user.userID.toString(), user.email, user.name),
+    },
+  });
+});
+
+const createToken = (id, email, name) => {
+  const token = jwt.sign(
+    {
+      userID: id,
+      email: email,
+      name: name,
+    },
+    jwtSecret,
+    { expiresIn: '1h' }
+  );
+  return token;
 };
-
-// Get user info
-exports.getUser = catchAsync(async (req, res, next) => {
-  const userID = req.params.id;
-
-  respFind = await User_Info.findOne({ where: { userID: userID } });
-
-  if (respFind) {
-    res.json({
-      status: 201,
-      received: req.body,
-      message: 'User found',
-      data: { respFind },
-    });
-    console.log('respFind', respFind);
-  }
-  else {
-    res.status(404).json({
-      status: 404,
-      received: req.body,
-      message: 'No Users found'
-    });
-  }
-});
-
-exports.logout = (req, res, next) => {};
