@@ -20,6 +20,7 @@ const Department = sequelize.define(
         key: "userID",
       },
     },
+    is_active: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: "1" },
     name: { type: Sequelize.STRING, allowNull: false },
     description: { type: Sequelize.TEXT, allowNull: true },
     created_on: {

@@ -8,6 +8,7 @@ const Department_Doc = require("../models/Department_Doc");
 const { catchAsync } = require('../util/catchAsync');
 
 // MODEL DEPARTMENT
+// CREATE DEPARTMENT AND ASSOCIATE CHIEF USER TO IT AUTOMAGICALLY
 exports.createDepart = catchAsync(async (req, res, next) => {
   const errors = validationResult(req);
 
@@ -34,18 +35,38 @@ exports.createDepart = catchAsync(async (req, res, next) => {
       name: departName,
       chief_userID: chief_user,
     });
-    respSave = await newDepart.save();
+    respSave1 = await newDepart.save();
+
+    respFindDepart = await Department.findOne({ where: { departmentID: respSave1.departmentID } });
+    console.log('respFindDepart', respFindDepart);
+
+    const newUser_Depart = new Department_User({
+      departmentID: respSave1.departmentID,
+      userID: chief_user,
+      has_ext_access: true
+    });
+    respSave2 = await newUser_Depart.save();
 
     res.json({
       status: 201,
       received: req.body,
-      message: 'Department created!',
-      data: { respSave },
+      message: 'Department Created and User associated',
+      data: [{ respSave1 },{ respSave2 }],
     });
-    console.log('respSave', respSave);
+    console.log('respSave-createDepart', [{ respSave1 },{ respSave2 }]);
+      
+    
+    // res.json({
+    //   status: 201,
+    //   received: req.body,
+    //   message: 'Department created!',
+    //   data: { respSave },
+    // });
+    //console.log('respSave', respSave);
   }
 });
 
+// GET LIST OF ONE/ALL DEPARTMENT(s)
 exports.getDeparts = catchAsync(async (req, res, next) => {
 
   if(req.body.id){
@@ -73,6 +94,7 @@ exports.getDeparts = catchAsync(async (req, res, next) => {
 });
 
 //MODEL DEPARTMENT_USER
+// GET ALL USERS FROM DEPARTMENT
 exports.getDepartUsers = catchAsync(async (req, res, next) => {
   const departID = req.params.id;
 
@@ -96,6 +118,7 @@ exports.getDepartUsers = catchAsync(async (req, res, next) => {
   }
 });
 
+// INSERT ONE USER INTO DEPARTMENT
 exports.insertUser_Depart = catchAsync(async (req, res, next) => {
   const errors = validationResult(req);
 

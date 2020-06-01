@@ -24,4 +24,7 @@ router.post(
   authControllers.signup
 );
 
+//Get user info
+router.get('/:id', authControllers.getUser);
+
 module.exports = router;
