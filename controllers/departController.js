@@ -98,7 +98,7 @@ exports.getDeparts = catchAsync(async (req, res, next) => {
 exports.getDepartUsers = catchAsync(async (req, res, next) => {
   const departID = req.params.id;
 
-  respFind = await Department_User.findOne({ where: { departmentID: departID } });
+  respFind = await Department_User.findAll({ where: { departmentID: departID } });
 
   if (respFind) {
     res.json({
