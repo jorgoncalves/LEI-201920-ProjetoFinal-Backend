@@ -1,17 +1,17 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
-const sequelize = require("../util/database");
-const User_Auth = require("./User_Auth")
+const sequelize = require('../util/database');
+const User_Auth = require('./User_Auth');
 
 const User_Info = sequelize.define(
-  "user_info",
+  'user_info',
   {
     userID: {
       type: Sequelize.UUID,
       autoIncrement: false,
       allowNull: false,
       primaryKey: true,
-      defaultValue: Sequelize.literal("uuid_generate_v4()"),
+      defaultValue: Sequelize.literal('uuid_generate_v4()'),
     },
     name: { type: Sequelize.STRING, allowNull: false },
     country: { type: Sequelize.STRING, allowNull: false },
@@ -20,15 +20,16 @@ const User_Info = sequelize.define(
     user_display: {
       type: Sequelize.JSON,
       allowNull: false,
-      defaultValue: "{}",
+      defaultValue: '{}',
     },
+    profile_img_path: { type: Sequelize.STRING, allowNull: true },
     created_on: {
-      type: "TIMESTAMP WITHOUT TIME ZONE",
+      type: 'TIMESTAMP WITHOUT TIME ZONE',
       allowNull: false,
       defaultValue: Sequelize.NOW,
     },
     updated_on: {
-      type: "TIMESTAMP WITHOUT TIME ZONE",
+      type: 'TIMESTAMP WITHOUT TIME ZONE',
       allowNull: false,
       defaultValue: Sequelize.NOW,
     },

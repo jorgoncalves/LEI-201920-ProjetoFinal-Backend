@@ -8,13 +8,13 @@ const User_Info = require('../models/User_Info');
 //PARA REMOVER MAIS TARDE
 const Department = require('../models/Department');
 const Department_User = require('../models/Department_User');
-const Document_Index = require("../models/Document_Index");
-const Document_Office_Location = require("../models/Document_Office_Location");
-const Record = require("../models/Records");
-const Attachments = require("../models/Attachments");
-const Commits_Alteration_History = require("../models/Commits_Alteration_History");
-const Department_Doc = require("../models/Department_Doc");
-const User_Document_permissions = require("../models/User_Document_permissions");
+const Document_Index = require('../models/Document_Index');
+const Document_Office_Location = require('../models/Document_Office_Location');
+const Record = require('../models/Records');
+const Attachments = require('../models/Attachments');
+const Commits_Alteration_History = require('../models/Commits_Alteration_History');
+const Department_Doc = require('../models/Department_Doc');
+const User_Document_permissions = require('../models/User_Document_permissions');
 
 const { catchAsync } = require('../util/catchAsync');
 
@@ -108,13 +108,19 @@ exports.login = catchAsync(async (req, res, next) => {
     error.statusCode = 401;
     throw error;
   }
+console.log(user);
 
   res.status(200).json({
     status: 201,
     message: 'User loggedin!',
     data: {
-      token: createToken(req.clientIp,user.userID.toString(), user.email, user.name),
+      token: createToken(
+        req.clientIp,
+        user.userID.toString(),
+        user.email,
+        user.name,
+        user.is_admin
+      ),
     },
   });
 });
-
