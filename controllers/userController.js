@@ -27,6 +27,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
   const userID = req.params.id;
 
   respFind = await User_Info.findOne({ where: { userID: userID } });
+  console.log(req.clientIp);
 
   if (respFind) {
     res.json({
@@ -35,7 +36,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
       message: 'User found',
       data: { respFind },
     });
-    console.log('respFind', respFind);
+    // console.log('respFind', respFind);
   } else {
     res.status(404).json({
       status: 404,

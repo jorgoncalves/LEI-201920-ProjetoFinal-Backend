@@ -1,5 +1,6 @@
 const express = require('express');
 const sequelize = require('./util/database');
+const requestIp = require('request-ip');
 
 const app = express();
 
@@ -23,9 +24,15 @@ app.use((req, res, next) => {
   next();
 });
 
+const ipMiddleware = function (req, res, next) {
+  const clientIp = requestIp.getClientIp(req);
+  req.clientIp = clientIp;
+  next();
+};
+
 app.use('/auth', authRoutes);
 app.use('/depart', departRoutes);
-app.use('/user', userRoutes);
+app.use('/user', ipMiddleware, userRoutes);
 // app.use('/home', isAuth,homeRoutes);
 
 app.use((error, req, res, next) => {
