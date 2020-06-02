@@ -24,6 +24,6 @@ const internalIps = [
 ];
 
 const checkIp = (ip) => {
-  if (internalIps.includes(ip)) return true;
-  else return false;
+  if (internalIps.includes(ip)) return false;
+  else return true;
 };
