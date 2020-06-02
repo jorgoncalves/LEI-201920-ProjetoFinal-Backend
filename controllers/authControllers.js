@@ -1,8 +1,7 @@
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
-const { jwtSecret } = require('./jwtToken');
+const { createToken } = require('./jwtToken');
 
 const User_Auth = require('../models/User_Auth');
 const User_Info = require('../models/User_Info');
@@ -96,7 +95,6 @@ exports.login = catchAsync(async (req, res, next) => {
   console.log('Password - ', password);
 
   const user = await User_Auth.findOne({ where: { email: email } });
-  console.log(user);
 
   if (!user) {
     const error = new Error('Could not find a user with that email.');
@@ -115,20 +113,8 @@ exports.login = catchAsync(async (req, res, next) => {
     status: 201,
     message: 'User loggedin!',
     data: {
-      token: createToken(user.userID.toString(), user.email, user.name),
+      token: createToken(req.clientIp,user.userID.toString(), user.email, user.name),
     },
   });
 });
 
-const createToken = (id, email, name) => {
-  const token = jwt.sign(
-    {
-      userID: id,
-      email: email,
-      name: name,
-    },
-    jwtSecret,
-    { expiresIn: '1h' }
-  );
-  return token;
-};
