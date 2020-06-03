@@ -5,6 +5,7 @@ const jwtSecret = 'supersecretsecret';
 exports.createToken = (ip, id, email, name, isAdmin) => {
   const token = jwt.sign(
     {
+      ip,
       isExternal: checkIp(ip),
       userID: id,
       email,
