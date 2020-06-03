@@ -59,4 +59,3 @@ exports.getUser = catchAsync(async (req, res, next) => {
   }
 });
 
-exports.logout = (req, res, next) => {};

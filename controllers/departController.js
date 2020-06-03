@@ -1,9 +1,10 @@
 const { validationResult } = require('express-validator');
 
 const User_Info = require('../models/User_Info');
+const User_Auth = require('../models/User_Auth');
 const Department = require('../models/Department');
 const Department_User = require('../models/Department_User');
-const Department_Doc = require("../models/Department_Doc");
+const Department_Doc = require('../models/Department_Doc');
 
 const { catchAsync } = require('../util/catchAsync');
 
@@ -27,23 +28,24 @@ exports.createDepart = catchAsync(async (req, res, next) => {
     res.status(400).json({
       status: 400,
       received: req.body,
-      message: 'User not found to create Department!'
+      message: 'User not found to create Department!',
     });
-  }
-  else if(respFind){
+  } else if (respFind) {
     const newDepart = new Department({
       name: departName,
       chief_userID: chief_user,
     });
     respSave1 = await newDepart.save();
 
-    respFindDepart = await Department.findOne({ where: { departmentID: respSave1.departmentID } });
+    respFindDepart = await Department.findOne({
+      where: { departmentID: respSave1.departmentID },
+    });
     console.log('respFindDepart', respFindDepart);
 
     const newUser_Depart = new Department_User({
       departmentID: respSave1.departmentID,
       userID: chief_user,
-      has_ext_access: true
+      has_ext_access: true,
     });
     respSave2 = await newUser_Depart.save();
 
@@ -51,11 +53,10 @@ exports.createDepart = catchAsync(async (req, res, next) => {
       status: 201,
       received: req.body,
       message: 'Department Created and User associated',
-      data: [{ respSave1 },{ respSave2 }],
+      data: [{ respSave1 }, { respSave2 }],
     });
-    console.log('respSave-createDepart', [{ respSave1 },{ respSave2 }]);
-      
-    
+    console.log('respSave-createDepart', [{ respSave1 }, { respSave2 }]);
+
     // res.json({
     //   status: 201,
     //   received: req.body,
@@ -68,21 +69,21 @@ exports.createDepart = catchAsync(async (req, res, next) => {
 
 // GET LIST OF ONE/ALL DEPARTMENT(s)
 exports.getDeparts = catchAsync(async (req, res, next) => {
-
-  if(req.body.id){
-    respFind = await Department.findOne({ where: { departmentID: req.body.id } });
-  }else{
+  if (req.body.id) {
+    respFind = await Department.findOne({
+      where: { departmentID: req.body.id },
+    });
+  } else {
     respFind = await Department.findAll();
   }
 
-  if (respFind.length==0) {
+  if (respFind.length == 0) {
     res.status(404).json({
       status: 404,
       received: req.body,
-      message: 'No Departments Found'
+      message: 'No Departments Found',
     });
-  }
-  else {
+  } else {
     res.json({
       status: 201,
       received: req.body,
@@ -98,7 +99,9 @@ exports.getDeparts = catchAsync(async (req, res, next) => {
 exports.getDepartUsers = catchAsync(async (req, res, next) => {
   const departID = req.params.id;
 
-  respFind = await Department_User.findAll({ where: { departmentID: departID } });
+  respFind = await Department_User.findAll({
+    where: { departmentID: departID },
+  });
 
   if (respFind) {
     res.json({
@@ -108,12 +111,11 @@ exports.getDepartUsers = catchAsync(async (req, res, next) => {
       data: { respFind },
     });
     console.log('respFind', respFind);
-  }
-  else {
+  } else {
     res.status(404).json({
       status: 404,
       received: req.body,
-      message: 'No Users found in this department'
+      message: 'No Users found in this department',
     });
   }
 });
@@ -129,29 +131,30 @@ exports.insertUser_Depart = catchAsync(async (req, res, next) => {
     throw error;
   }
 
+  departIns = await Department.findOne({
+    where: { departmentID: req.params.id },
+  });
 
-  departIns = await Department.findOne({ where: { departmentID: req.params.id } });
-
-  if(departIns.length==0){
+  if (departIns.length == 0) {
     res.status(404).json({
       status: 404,
       received: req.body,
-      message: 'No Departments Found with input id='+ req.params.id
+      message: 'No Departments Found with input id=' + req.params.id,
     });
-  }else{
+  } else {
     userIns = await User_Info.findOne({ where: { userID: req.body.userID } });
 
-    if(userIns.length==0){
+    if (userIns.length == 0) {
       res.status(404).json({
         status: 404,
         received: req.body,
-        message: 'No Users Found with input userID='+ req.body.userID
+        message: 'No Users Found with input userID=' + req.body.userID,
       });
-    }else{
+    } else {
       const newUser_Depart = new Department_User({
         departmentID: req.params.id,
         userID: req.body.userID,
-        has_ext_access: req.body.has_ext_access
+        has_ext_access: req.body.has_ext_access,
       });
       respSave = await newUser_Depart.save();
 
@@ -163,5 +166,67 @@ exports.insertUser_Depart = catchAsync(async (req, res, next) => {
       });
       console.log('respSave', respSave);
     }
+  }
+});
+
+exports.getUserDepartColleagues = catchAsync(async (req, res, next) => {
+  const userID = req.params.id;
+
+  // respFindUser_Info = await User_Info.findOne({
+  //   where: { userID: userID },
+  // });
+  // respFindUser_Auth = await User_Auth.findOne({
+  //   where: { userID: userID },
+  // });
+  const respFindUserDepart = await Department_User.findAll({
+    where: { userID: userID },
+  });
+  const respDepartUsers = await Promise.all(
+    await respFindUserDepart.map(async (userDepart) => {
+      const departInfo = await Department.findOne({
+        where: { departmentID: userDepart.departmentID },
+      });
+      const allDepartUsers = await Department_User.findAll({
+        where: { departmentID: userDepart.departmentID },
+      });
+      const userInDepartInfo = await Promise.all(
+        await allDepartUsers.map(async (userInDepart) => {
+          const userInfo = await User_Info.findOne({
+            where: { userID: userInDepart.userID },
+          });
+          const userAuth = await User_Auth.findOne({
+            where: { userID: userInDepart.userID },
+          });
+          console.log(userAuth);
+
+          delete userAuth.dataValues.password;
+
+          return {
+            userInfo,
+            userAuth,
+          };
+        })
+      );
+
+      return {
+        departInfo: { ...departInfo.dataValues, userInDepartInfo },
+      };
+    })
+  );
+
+  if (respDepartUsers) {
+    res.json({
+      status: 201,
+      received: req.body,
+      message: 'Users found in Department',
+      data: { respDepartUsers },
+    });
+    // console.log('respDepartUsers', respDepartUsers);
+  } else {
+    res.status(404).json({
+      status: 404,
+      received: req.body,
+      message: 'No Users found in this department',
+    });
   }
 });
