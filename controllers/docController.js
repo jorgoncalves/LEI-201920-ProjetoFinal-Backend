@@ -98,7 +98,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
       status: 201,
       message: 'Document saved!',
       data: {
-        respObj,
+        ...respObj,
       },
     });
   } catch (error) {
