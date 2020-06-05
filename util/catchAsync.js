@@ -6,6 +6,8 @@ exports.catchAsync = (fn) => {
       if (!error.statusCode) {
         error.statusCode = 500;
       }
+      console.log(error);
+
       next(error);
     }
   };
