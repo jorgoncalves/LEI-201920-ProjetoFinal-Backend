@@ -6,10 +6,12 @@ const router = express.Router();
 
 //Get user info
 
+router.get('/getDocs', docController.getDocs);
+
 router.post('/insertDoc/:userID', docController.insertDoc);
 
 router.get('/:userID/:docState', docController.getDocByState);
 
-router.put('/:docID');
+router.put('/:docID', docController.updateDoc);
 
 module.exports = router;
