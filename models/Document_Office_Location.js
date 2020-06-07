@@ -1,38 +1,36 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
-const sequelize = require("../util/database");
-const Document_index = require("./Document_Index");
+const sequelize = require('../util/database');
+const Document_index = require('./Document_Index');
 
 const Commits_Alteration_History = sequelize.define(
-  "document_office_location",
+  'document_office_location',
   {
-    documentID: {
+    documentID_new: {
       type: Sequelize.INTEGER,
       allowNull: false,
-      autoIncrement: false,
-      primaryKey: true,
       references: {
         model: Document_index,
-        key: "documentID",
+        key: 'documentID',
       },
     },
-    documentID_new: {
+    documentID_old: {
       type: Sequelize.INTEGER,
       allowNull: true,
       references: {
         model: Document_index,
-        key: "documentID",
+        key: 'documentID',
       },
     },
     local: { type: Sequelize.STRING, allowNull: false },
     status: { type: Sequelize.STRING, allowNull: false },
     created_on: {
-      type: "TIMESTAMP WITHOUT TIME ZONE",
+      type: 'TIMESTAMP WITHOUT TIME ZONE',
       allowNull: false,
       defaultValue: Sequelize.NOW,
     },
     updated_on: {
-      type: "TIMESTAMP WITHOUT TIME ZONE",
+      type: 'TIMESTAMP WITHOUT TIME ZONE',
       allowNull: false,
       defaultValue: Sequelize.NOW,
     },
