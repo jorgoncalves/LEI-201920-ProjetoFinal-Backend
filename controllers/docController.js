@@ -64,7 +64,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
 
     //is_public vem do frontend como boollean
     let {
-      name,
+      name, //mandar sempre o nome do doc anterior
       status,
       approving_userID,
       description,
@@ -80,7 +80,6 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
       `${req.file.filename}`
     );
     let newPath;
-    //versão deverá ser dinamica
     const dir = path.join(`FileStorage`, `${name}`);
 
     if (!fs.existsSync(dir)) {

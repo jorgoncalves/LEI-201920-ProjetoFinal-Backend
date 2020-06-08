@@ -13,6 +13,7 @@ const fileExplorerRoutes = require('./routes/fileExplorerRoutes');
 const docRoutes = require('./routes/docRoutes');
 const commitRoutes = require('./routes/commitRoutes');
 const docLocationRoutes = require('./routes/docLocationRoutes');
+const registerRoutes = require('./routes/registerRoutes');
 // const homeRoutes = require('./routes/homeRoutes');
 
 sequelize.sync();
@@ -65,6 +66,7 @@ app.use('/filexplorer', isExternal, fileExplorerRoutes);
 app.use('/docs', isExternal, docRoutes);
 app.use('/commits', isExternal, commitRoutes);
 app.use('/docLocation', isExternal, docLocationRoutes);
+app.use('/registers', isExternal, registerRoutes);
 // app.use('/home', isExternal, homeRoutes);
 
 app.use((error, req, res, next) => {

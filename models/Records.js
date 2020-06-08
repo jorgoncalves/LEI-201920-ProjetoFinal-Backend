@@ -1,11 +1,11 @@
-const Sequelize = require("sequelize");
+const Sequelize = require('sequelize');
 
-const sequelize = require("../util/database");
-const User_Info = require("./User_Info");
-const Document_Index = require("./Document_Index");
+const sequelize = require('../util/database');
+const User_Info = require('./User_Info');
+const Document_Index = require('./Document_Index');
 
 const Records = sequelize.define(
-  "records",
+  'records',
   {
     recordID: {
       type: Sequelize.INTEGER,
@@ -18,7 +18,7 @@ const Records = sequelize.define(
       allowNull: false,
       references: {
         model: Document_Index,
-        key: "documentID",
+        key: 'documentID',
       },
     },
     submitted_by_UserID: {
@@ -26,14 +26,13 @@ const Records = sequelize.define(
       allowNull: false,
       references: {
         model: User_Info,
-        key: "userID",
+        key: 'userID',
       },
     },
-    path: { type: Sequelize.TEXT, allowNull: false },
-    name: { type: Sequelize.STRING, allowNull: false },
+    tags: { type: Sequelize.ARRAY(Sequelize.STRING), allowNull: false },
     description: { type: Sequelize.TEXT, allowNull: true },
     created_on: {
-      type: "TIMESTAMP WITHOUT TIME ZONE",
+      type: 'TIMESTAMP WITHOUT TIME ZONE',
       allowNull: false,
       defaultValue: Sequelize.NOW,
     },
