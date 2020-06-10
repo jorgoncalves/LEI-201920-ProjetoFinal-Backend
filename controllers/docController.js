@@ -58,7 +58,7 @@ exports.getDocs = async (req, res, next) => {
   try {
     const {
       name,
-      path: newPath,
+      path,
       file_extension,
       isModelFile,
       has_records,
@@ -216,6 +216,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
       editUsersResp.push(respS);
     }
     consultUsersList = JSON.parse(consultUsersList);
+    consultUsersList.push(approving_userID)
     const consultUsersResp = [];
     for await (const userID of consultUsersList) {
       const UserDocPermission = new User_Document_permissions({
