@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const { QueryTypes } = require('sequelize');
+const sequelize = require('../util/database');
 
 // require('../models/Department');
 const Department_Doc = require('../models/Department_Doc');
@@ -57,6 +59,7 @@ exports.getDocsFS = async (req, res, next) => {
 exports.getDocs = async (req, res, next) => {
   try {
     const {
+      documentID,
       name,
       path,
       file_extension,
@@ -68,9 +71,45 @@ exports.getDocs = async (req, res, next) => {
       is_public,
       is_external,
       size,
+      userID,
     } = req.body;
 
-    const documents = await Document_Index.findAll({ where: { ...req.body } });
+    delete req.body.userID;
+
+    // const documents = await Document_Index.findAll({ where: { ...req.body } });
+    const documents = await sequelize.query(
+      `SELECT *
+    FROM public.user_document_permissions Inner Join public.document_indices 
+    on user_document_permissions."documentID" = document_indices."documentID" 
+    where user_document_permissions."userID" = '${userID}' 
+    ${name ? ` and document_indices."name"='${name}'` : ''}
+    ${
+      file_extension
+        ? ` and document_indices."file_extension"='${file_extension}'`
+        : ''
+    }
+    ${isModelFile ? ` and document_indices."isModelFile"='${isModelFile}'` : ''}
+      ${
+        has_records
+          ? ` and document_indices."has_records"='${has_records}'`
+          : ''
+      }
+      ${status ? ` and document_indices."status"='${status}'` : ''}
+      ${
+        approving_userID
+          ? ` and document_indices."approving_userID"='${approving_userID}'`
+          : ''
+      }
+      ${is_public ? ` and document_indices."is_public"='${is_public}'` : ''}
+      ${
+        is_external
+          ? ` and document_indices."is_external"='${is_external}'`
+          : ''
+      };`,
+      {
+        type: QueryTypes.SELECT,
+      }
+    );
 
     const respObj = { documents };
     res.status(201).json({
@@ -96,8 +135,6 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
   try {
     const { userID } = req.params;
     let documentID_old = null;
-    console.log(req.file);
-
     //aproving user dá origem a notificação
 
     //is_public vem do frontend como boollean
@@ -132,8 +169,6 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
         `1`,
         `${req.file.filename}`
       );
-
-      //fazer commit
     } else {
       const existingDir = fs
         .readdirSync(dir, { withFileTypes: true })
@@ -216,7 +251,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
       editUsersResp.push(respS);
     }
     consultUsersList = JSON.parse(consultUsersList);
-    consultUsersList.push(approving_userID)
+    consultUsersList.push(approving_userID);
     const consultUsersResp = [];
     for await (const userID of consultUsersList) {
       const UserDocPermission = new User_Document_permissions({
