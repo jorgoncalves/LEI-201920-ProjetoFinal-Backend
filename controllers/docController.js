@@ -72,8 +72,9 @@ exports.getDocs = async (req, res, next) => {
       is_external,
       size,
       userID,
-    } = req.body;
+    } = req.query;
 
+    console.log(req.query);
     delete req.body.userID;
 
     // const documents = await Document_Index.findAll({ where: { ...req.body } });
