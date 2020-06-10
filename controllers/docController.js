@@ -1,12 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 
-require('../models/Department');
+// require('../models/Department');
 const Department_Doc = require('../models/Department_Doc');
-require('../models/User_Info');
+// require('../models/User_Info');
 const User_Document_permissions = require('../models/User_Document_permissions');
 const Document_Index = require('../models/Document_Index');
-require('../models/Document_Office_Location');
+// require('../models/Document_Office_Location');
 const Commit = require('../models/Commits_Alteration_History');
 // require('../models/Attachments')
 // require('../models/Records')
@@ -19,7 +19,7 @@ const {
 
 const { catchAsync } = require('../util/catchAsync');
 
-exports.getDocs = async (req, res, next) => {
+exports.getDocsFS = async (req, res, next) => {
   //colcar lógica para aceitar parametros
   try {
     const { optionPath } = req.body;
@@ -31,7 +31,7 @@ exports.getDocs = async (req, res, next) => {
     const getDirectories = (source) =>
       fs
         .readdirSync(source, { withFileTypes: true })
-        .filter((dirent) => dirent.isDirectory() && dirent.name != 'temp')
+        .filter((dirent) => dirent.name != 'temp')
         .map((dirent) => dirent.name);
     const respObj = getDirectories(rootPath);
     res.status(201).json({
@@ -54,6 +54,44 @@ exports.getDocs = async (req, res, next) => {
   }
 };
 
+exports.getDocs = async (req, res, next) => {
+  try {
+    const {
+      name,
+      path: newPath,
+      file_extension,
+      isModelFile,
+      has_records,
+      status,
+      approving_userID,
+      description,
+      is_public,
+      is_external,
+      size,
+    } = req.body;
+
+    const documents = await Document_Index.findAll({ where: { ...req.body } });
+
+    const respObj = { documents };
+    res.status(201).json({
+      status: 201,
+      message: 'Documents found!',
+      data: {
+        ...respObj,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({
+      status: 404,
+      message: 'Documents not found!',
+      data: {
+        error,
+      },
+    });
+  }
+};
+
 exports.insertDoc = catchAsync(async (req, res, next) => {
   try {
     const { userID } = req.params;
@@ -65,6 +103,8 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
     //is_public vem do frontend como boollean
     let {
       name, //mandar sempre o nome do doc anterior
+      isModelFile,
+      has_records,
       status,
       approving_userID,
       description,
@@ -99,8 +139,12 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
         .readdirSync(dir, { withFileTypes: true })
         .filter((dirent) => dirent.isDirectory() && dirent.name != 'Registos')
         .map((dirent) => dirent.name);
+      console.log(existingDir);
 
-      const newV = parseInt(existingDir[existingDir.length - 1]) + 1;
+      const newV =
+        existingDir.length === 0
+          ? 1
+          : parseInt(existingDir[existingDir.length - 1]) + 1;
       console.log('newV', newV);
       const v = path.join(`FileStorage`, `${name}`, `${newV}`);
       fs.mkdirSync(v);
@@ -115,41 +159,46 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
         where: { name: name },
         order: [['created_on', 'DESC']],
       });
-      oldDocumentIndex.status = 'obsolete';
-      await oldDocumentIndex.save();
-      documentID_old = oldDocumentIndex.dataValues.documentID;
+      if (oldDocumentIndex !== null) {
+        oldDocumentIndex.status = 'obsolete';
+        await oldDocumentIndex.save();
+        documentID_old = oldDocumentIndex.dataValues.documentID;
+      }
 
       //atualizar o Document_Index do doc antigo para obsoleto
       //fazer commit
     }
     fs.renameSync(currentPath, newPath);
 
-    const filePath = newPath;
-    const file_extension = req.file.mimetype;
-    const size = req.file.size; //em b por default
-    console.log(approving_userID);
-
     //path,size,file_extension assim que for escrito no fs
     const newDoc = new Document_Index({
       name,
+      path: newPath,
+      file_extension: req.file.mimetype,
+      isModelFile,
+      has_records,
       status,
       approving_userID,
       description,
       is_public,
       is_external,
-      path: filePath,
-      file_extension,
-      size,
+      size: req.file.size,
     });
     const saveResp = await newDoc.save();
     const documentID_new = saveResp.documentID;
-    const commit = new Commit({
-      userID,
-      documentID_old,
-      documentID_new,
-      status,
-    });
-    console.log('commit', commit);
+    let commit =
+      documentID_old !== null
+        ? new Commit({
+            userID,
+            documentID_old,
+            documentID_new,
+            status,
+          })
+        : new Commit({
+            userID,
+            documentID_new,
+            status,
+          });
     const respCommit = await commit.save();
     //inserir lógica dos commits
     editUsersList = JSON.parse(editUsersList);

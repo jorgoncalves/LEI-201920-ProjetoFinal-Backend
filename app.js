@@ -38,9 +38,9 @@ app.use('/auth', isExternal, authRoutes);
 app.use('/depart', isExternal, departRoutes);
 app.use('/user', isExternal, userRoutes);
 app.use('/filexplorer', isExternal, fileExplorerRoutes);
-app.use('/docs', isExternal, docRoutes);
+app.use('/docs', isExternal, multerSingleFile, docRoutes);
 app.use('/commits', isExternal, commitRoutes);
-app.use('/docLocation', isExternal, multerSingleFile, docLocationRoutes);
+app.use('/docLocation', isExternal, docLocationRoutes);
 app.use('/registers', isExternal, multerMultipleFiles, registerRoutes);
 // app.use('/home', isExternal, homeRoutes);
 

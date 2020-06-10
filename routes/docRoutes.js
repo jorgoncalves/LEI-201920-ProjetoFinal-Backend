@@ -6,6 +6,8 @@ const router = express.Router();
 
 //Get user info
 
+router.get('/getDocsFS', docController.getDocsFS);
+
 router.get('/getDocs', docController.getDocs);
 
 router.post('/insertDoc/:userID', docController.insertDoc);
