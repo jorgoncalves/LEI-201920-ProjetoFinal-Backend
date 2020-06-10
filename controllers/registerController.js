@@ -2,6 +2,7 @@ const { Op } = require('sequelize');
 
 // const {param1, param2, param3, {subparam1, subparam2}} = req.body
 
+const Document_Index = require('../models/Document_Index');
 const Record = require('../models/Records');
 const Attachments = require('../models/Attachments');
 
@@ -13,22 +14,42 @@ exports.getRecords = async (req, res, next) => {
       recordID,
       documentID,
       submitted_by_UserID,
-      tags,
+      tagAno,
+      tagCliente,
+      tagNIF,
+      tagCategoria,
       description,
     } = req.body;
-    //descobrir uma solução para o tags
-    delete req.body.tags;
+    delete req.body.tagAno;
+    delete req.body.tagCliente;
+    delete req.body.tagNIF;
+    delete req.body.tagCategoria;
     let records;
-    if (tags !== undefined || tags.length == 0)
+    const tags = [];
+    if (tagAno) tags.push(tagAno);
+    if (tagCliente) tags.push(tagCliente);
+    if (tagNIF) tags.push(tagNIF);
+    if (tagCategoria) tags.push(tagCategoria);
+    if (tags.length <= 0)
       records = await Record.findAll({ where: { ...req.body } });
     else
       records = await Record.findAll({
         where: { tags: { [Op.contains]: tags }, ...req.body },
       });
+
+    for await (const record of records) {
+      const recordAttachments = await Attachments.findAll({
+        where: { recordID: record.recordID },
+      });
+      records.find(
+        (rec) => rec.dataValues.recordID === record.recordID
+      ).dataValues.attachments = recordAttachments;
+    }
+
     const respObj = { records };
     res.status(201).json({
       status: 201,
-      message: 'Record saved!',
+      message: 'Records found!',
       data: {
         ...respObj,
       },
@@ -37,7 +58,7 @@ exports.getRecords = async (req, res, next) => {
     console.log(error);
     res.status(404).json({
       status: 404,
-      message: 'Record not saved!',
+      message: 'Records not found!',
       data: {
         error,
       },
@@ -48,23 +69,42 @@ exports.getRecords = async (req, res, next) => {
 exports.postRecord = async (req, res, next) => {
   // [ano, cliente, nif, categoria]
   try {
-    const { documentID, submitted_by_UserID, tags, description } = req.body;
+    const {
+      documentID,
+      submitted_by_UserID,
+      tagAno,
+      tagCliente,
+      tagNIF,
+      tagCategoria,
+      description,
+    } = req.body;
+    const tagsArr = [tagAno, tagCliente, tagNIF, tagCategoria];
+
     const newRecord = new Record({
       documentID,
       submitted_by_UserID,
-      tags,
+      tags: tagsArr,
       description,
     });
-    const respSave = await newRecord.save();
-    const recordID = respSave.recordID;
-    if (req.body.attachment) {
-      const path = await moveFileRegistos(name, req.file.filename);
-      // req.file.filename;
-      // recordID
-      // path
-      // name
+    const respSaveRecord = await newRecord.save();
+    const recordID = respSaveRecord.recordID;
+    const respAttachmentArr = [];
+    if (req.files) {
+      // path para multiplos ficheiros
+
+      const docData = await Document_Index.findByPk(documentID);
+      const pathArr = await moveFileRegistos(recordID, docData.name, req.files);
+      for await (const { name, path } of pathArr) {
+        const newAttachment = new Attachments({
+          recordID,
+          path,
+          name,
+        });
+        const respAttachmentSave = await newAttachment.save();
+        respAttachmentArr.push(respAttachmentSave);
+      }
     }
-    const respObj = { respSave };
+    const respObj = { respSaveRecord, respAttachmentArr };
     res.status(201).json({
       status: 201,
       message: 'Record saved!',

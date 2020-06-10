@@ -6,6 +6,9 @@ const app = express();
 
 const isAuth = require('./middleware/isAuth');
 const isExternal = require('./middleware/isExternal');
+const multerSingleFile = require('./middleware/multer/multerSingleFile');
+const multerMultipleFiles = require('./middleware/multer/multerMultipleFiles');
+
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const departRoutes = require('./routes/departRoutes');
@@ -17,34 +20,6 @@ const registerRoutes = require('./routes/registerRoutes');
 // const homeRoutes = require('./routes/homeRoutes');
 
 sequelize.sync();
-
-// const fileFilter = (req, file, cb) => {
-//   if (
-//     file.mimetype === 'image/png' ||
-//     file.mimetype === 'image/jpg' ||
-//     file.mimetype === 'image/jpeg'
-//   ) {
-//     cb(null, true);
-//   } else {
-//     cb(null, false);
-//   }
-// };
-
-const fileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, `FileStorage/temp`);
-  },
-  filename: (req, file, cb) => {
-    // cb(null, Date.now() + '_' + file.originalname);
-    cb(null, file.originalname);
-  },
-});
-app.use(
-  multer({
-    storage: fileStorage,
-    // fileFilter: fileFilter
-  }).single('fileMulter')
-);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -65,8 +40,8 @@ app.use('/user', isExternal, userRoutes);
 app.use('/filexplorer', isExternal, fileExplorerRoutes);
 app.use('/docs', isExternal, docRoutes);
 app.use('/commits', isExternal, commitRoutes);
-app.use('/docLocation', isExternal, docLocationRoutes);
-app.use('/registers', isExternal, registerRoutes);
+app.use('/docLocation', isExternal, multerSingleFile, docLocationRoutes);
+app.use('/registers', isExternal, multerMultipleFiles, registerRoutes);
 // app.use('/home', isExternal, homeRoutes);
 
 app.use((error, req, res, next) => {
