@@ -15,7 +15,6 @@ exports.getUsers = catchAsync(async (req, res, next) => {
       message: 'Users found',
       data: { respFind },
     });
-    console.log('respFind', respFind);
   } else {
     res.status(404).json({
       status: 404,
@@ -28,7 +27,6 @@ exports.getUsers = catchAsync(async (req, res, next) => {
 // Get user info
 exports.getUser = catchAsync(async (req, res, next) => {
   const userID = req.params.id;
-
   const respFind = await User_Info.findOne({ where: { userID: userID } });
   const respFindAuth = await User_Auth.findOne({ where: { userID: userID } });
   const respFindDepartUser = await Department_User.findAll({
@@ -70,10 +68,9 @@ exports.updateUser = async (req, res, next) => {
       user_display,
       profile_img_path,
     } = req.body;
+    console.log(req.body);
 
     const userInfo = await User_Info.findByPk(userID);
-
-    console.log(userInfo);
     if (name) userInfo.name = name;
     if (country) userInfo.country = country;
     if (country_code) userInfo.country_code = country_code;

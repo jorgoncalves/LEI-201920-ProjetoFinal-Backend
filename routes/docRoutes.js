@@ -16,4 +16,6 @@ router.get('/:userID/:docState', docController.getDocByState);
 
 router.put('/:docID', docController.updateDoc);
 
+router.get('/getDocDepart', docController.getDocDepart);
+
 module.exports = router;

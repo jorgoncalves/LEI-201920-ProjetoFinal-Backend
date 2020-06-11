@@ -82,8 +82,11 @@ exports.getDocs = async (req, res, next) => {
       `SELECT *
     FROM public.user_document_permissions Inner Join public.document_indices 
     on user_document_permissions."documentID" = document_indices."documentID" 
-    where user_document_permissions."userID" = '${userID}' 
+    where  1=1 ${
+      userID ? `and user_document_permissions."userID" = '${userID}'` : ''
+    } 
     ${name ? ` and document_indices."name"='${name}'` : ''}
+    ${documentID ? ` and document_indices."documentID"='${documentID}'` : ''}
     ${
       file_extension
         ? ` and document_indices."file_extension"='${file_extension}'`
@@ -125,6 +128,31 @@ exports.getDocs = async (req, res, next) => {
     res.status(404).json({
       status: 404,
       message: 'Documents not found!',
+      data: {
+        error,
+      },
+    });
+  }
+};
+
+exports.getDocDepart = async (req, res, next) => {
+  try {
+    const docPermisions = await Department_Doc.findAll({
+      where: { ...req.query },
+    });
+    const respObj = { docPermisions };
+    res.status(201).json({
+      status: 201,
+      message: 'Permissions found!',
+      data: {
+        ...respObj,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({
+      status: 404,
+      message: 'Something whent wrong!',
       data: {
         error,
       },
