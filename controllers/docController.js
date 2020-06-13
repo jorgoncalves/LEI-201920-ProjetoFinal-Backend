@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { QueryTypes } = require('sequelize');
 const sequelize = require('../util/database');
+const { Op } = require('sequelize');
 
 // require('../models/Department');
 const Department_Doc = require('../models/Department_Doc');
@@ -55,8 +56,52 @@ exports.getDocsFS = async (req, res, next) => {
     });
   }
 };
-
 exports.getDocs = async (req, res, next) => {
+  try {
+    const {
+      name,
+      path: newPath,
+      file_extension,
+      isModelFile,
+      has_records,
+      status,
+      approving_userID,
+      description,
+      is_public,
+      is_external,
+      size,
+    } = req.query;
+    delete req.query.status;
+    let documents;
+    if (status !== undefined)
+      documents = await Document_Index.findAll({
+        where: { status: { [Op.or]: [status] }, ...req.query },
+      });
+    else
+      documents = await Document_Index.findAll({
+        where: { ...req.query },
+      });
+    const respObj = { documents };
+    res.status(201).json({
+      status: 201,
+      message: 'Documents found!',
+      data: {
+        ...respObj,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({
+      status: 404,
+      message: 'Documents not found!',
+      data: {
+        error,
+      },
+    });
+  }
+};
+
+exports.getDocsPermissions = async (req, res, next) => {
   try {
     const {
       documentID,
@@ -269,7 +314,11 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
     const editUsersResp = [];
     //é necessario discutir has_ext_access
     editUsersList.push(userID);
+    console.log(editUsersList);
+
     for await (const userID of editUsersList) {
+      console.log(userID);
+
       const UserDocPermission = new User_Document_permissions({
         documentID: documentID_new,
         userID: userID,
@@ -280,7 +329,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
       editUsersResp.push(respS);
     }
     consultUsersList = JSON.parse(consultUsersList);
-    consultUsersList.push(approving_userID);
+    if (approving_userID != undefined) consultUsersList.push(approving_userID);
     const consultUsersResp = [];
     for await (const userID of consultUsersList) {
       const UserDocPermission = new User_Document_permissions({
@@ -377,12 +426,21 @@ exports.updateDoc = async (req, res, next) => {
     }
     if (consultUsersList) {
       consultUsersList = JSON.parse(consultUsersList);
-      consultUsersList.push(oldDocumentIndex.approving_userID);
-      respConsultUsersList = await updateUserDocPermissions(
-        documentID,
-        2,
-        consultUsersList
-      );
+      console.log(consultUsersList.length);
+
+      if (
+        oldDocumentIndex.approving_userID !== null &&
+        oldDocumentIndex.approving_userID !== oldDocCommit.userID
+      )
+        consultUsersList.push(oldDocumentIndex.approving_userID);
+      console.log(consultUsersList);
+
+      if (consultUsersList.length > 0)
+        respConsultUsersList = await updateUserDocPermissions(
+          documentID,
+          2,
+          consultUsersList
+        );
     }
     if (departmentList) {
       departmentList = JSON.parse(departmentList);

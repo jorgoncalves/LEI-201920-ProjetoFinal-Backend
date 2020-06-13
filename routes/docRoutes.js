@@ -10,6 +10,8 @@ router.get('/getDocsFS', docController.getDocsFS);
 
 router.get('/getDocs', docController.getDocs);
 
+router.get('/getDocsPermissions', docController.getDocsPermissions);
+
 router.post('/insertDoc/:userID', docController.insertDoc);
 
 router.get('/:userID/:docState', docController.getDocByState);
