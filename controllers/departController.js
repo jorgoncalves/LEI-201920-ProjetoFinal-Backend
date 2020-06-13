@@ -40,7 +40,7 @@ exports.createDepart = catchAsync(async (req, res, next) => {
     respFindDepart = await Department.findOne({
       where: { departmentID: respSave1.departmentID },
     });
-    console.log('respFindDepart', respFindDepart);
+    // console.log('respFindDepart', respFindDepart);
 
     const newUser_Depart = new Department_User({
       departmentID: respSave1.departmentID,
@@ -55,7 +55,7 @@ exports.createDepart = catchAsync(async (req, res, next) => {
       message: 'Department Created and User associated',
       data: [{ respSave1 }, { respSave2 }],
     });
-    console.log('respSave-createDepart', [{ respSave1 }, { respSave2 }]);
+    // console.log('respSave-createDepart', [{ respSave1 }, { respSave2 }]);
 
     // res.json({
     //   status: 201,
@@ -90,7 +90,7 @@ exports.getDeparts = catchAsync(async (req, res, next) => {
       message: 'Department(s) found!',
       data: { respFind },
     });
-    console.log('respFind', respFind);
+    // console.log('respFind', respFind);
   }
 });
 
@@ -110,7 +110,7 @@ exports.getDepartUsers = catchAsync(async (req, res, next) => {
       message: 'Users found in Department',
       data: { respFind },
     });
-    console.log('respFind', respFind);
+    // console.log('respFind', respFind);
   } else {
     res.status(404).json({
       status: 404,
@@ -164,7 +164,7 @@ exports.insertUser_Depart = catchAsync(async (req, res, next) => {
         message: 'User associated with Department!',
         data: { respSave },
       });
-      console.log('respSave', respSave);
+      // console.log('respSave', respSave);
     }
   }
 });
@@ -197,7 +197,7 @@ exports.getUserDepartColleagues = catchAsync(async (req, res, next) => {
           const userAuth = await User_Auth.findOne({
             where: { userID: userInDepart.userID },
           });
-          console.log(userAuth);
+          // console.log(userAuth);
 
           delete userAuth.dataValues.password;
 
