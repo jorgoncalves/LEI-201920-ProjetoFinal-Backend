@@ -9,6 +9,7 @@ const Attachments = require('../models/Attachments');
 const { moveFileRegistos } = require('./helpers/moveFileRegistos');
 
 exports.getRecords = async (req, res, next) => {
+  console.log(req.query);
   try {
     const {
       recordID,
@@ -19,11 +20,11 @@ exports.getRecords = async (req, res, next) => {
       tagNIF,
       tagCategoria,
       description,
-    } = req.body;
-    delete req.body.tagAno;
-    delete req.body.tagCliente;
-    delete req.body.tagNIF;
-    delete req.body.tagCategoria;
+    } = req.query;
+    delete req.query.tagAno;
+    delete req.query.tagCliente;
+    delete req.query.tagNIF;
+    delete req.query.tagCategoria;
     let records;
     const tags = [];
     if (tagAno) tags.push(tagAno);
@@ -31,10 +32,10 @@ exports.getRecords = async (req, res, next) => {
     if (tagNIF) tags.push(tagNIF);
     if (tagCategoria) tags.push(tagCategoria);
     if (tags.length <= 0)
-      records = await Record.findAll({ where: { ...req.body } });
+      records = await Record.findAll({ where: { ...req.query } });
     else
       records = await Record.findAll({
-        where: { tags: { [Op.contains]: tags }, ...req.body },
+        where: { tags: { [Op.contains]: tags }, ...req.query },
       });
 
     for await (const record of records) {

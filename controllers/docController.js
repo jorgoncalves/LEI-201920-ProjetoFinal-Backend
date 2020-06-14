@@ -21,6 +21,7 @@ const {
 } = require('./docControllerFunctions/updateDoc');
 
 const { catchAsync } = require('../util/catchAsync');
+const User_Info = require('../models/User_Info');
 
 exports.getDocsFS = async (req, res, next) => {
   //colcar lógica para aceitar parametros
@@ -123,7 +124,7 @@ exports.getDocsPermissions = async (req, res, next) => {
     delete req.body.userID;
 
     // const documents = await Document_Index.findAll({ where: { ...req.body } });
-    const documents = await sequelize.query(
+    let resp = await sequelize.query(
       `SELECT *
     FROM public.user_document_permissions Inner Join public.document_indices 
     on user_document_permissions."documentID" = document_indices."documentID" 
@@ -158,6 +159,16 @@ exports.getDocsPermissions = async (req, res, next) => {
       {
         type: QueryTypes.SELECT,
       }
+    );
+    let documents = await Promise.all(
+      await resp.map(async (doc) => {
+        const newDoc = doc;
+        const temp = await User_Info.findByPk(newDoc.approving_userID);
+        if (temp !== null) newDoc.approvingUser_Data = temp.dataValues;
+        else newDoc.approvingUser_Data = {};
+
+        return newDoc;
+      })
     );
 
     const respObj = { documents };
@@ -231,12 +242,16 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
       `${req.file.filename}`
     );
     let newPath;
+    console.log(req.file);
+
+    const fileExtension = req.file.filename.split('.')[1];
     const dir = path.join(`FileStorage`, `${name}`);
 
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir);
       const v = path.join(`FileStorage`, `${name}`, `1`);
       fs.mkdirSync(v);
+      req.file.filename = `${name}[version_1].${fileExtension}`;
       newPath = path.join(
         `FileStorage`,
         `${name}`,
@@ -258,6 +273,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
       const v = path.join(`FileStorage`, `${name}`, `${newV}`);
       fs.mkdirSync(v);
 
+      req.file.filename = `${name}[version_${newV}].${fileExtension}`;
       newPath = path.join(
         `FileStorage`,
         `${name}`,
@@ -268,7 +284,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
         where: { name: name },
         order: [['created_on', 'DESC']],
       });
-      if (oldDocumentIndex !== null) {
+      if (oldDocumentIndex !== null && oldDocumentIndex.status !== 'approved') {
         oldDocumentIndex.status = 'obsolete';
         await oldDocumentIndex.save();
         documentID_old = oldDocumentIndex.dataValues.documentID;
@@ -309,7 +325,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
             status,
           });
     const respCommit = await commit.save();
-    //inserir lógica dos commits
+
     editUsersList = JSON.parse(editUsersList);
     const editUsersResp = [];
     //é necessario discutir has_ext_access
@@ -329,7 +345,8 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
       editUsersResp.push(respS);
     }
     consultUsersList = JSON.parse(consultUsersList);
-    if (approving_userID != undefined) consultUsersList.push(approving_userID);
+    if (approving_userID != undefined && approving_userID !== userID)
+      consultUsersList.push(approving_userID);
     const consultUsersResp = [];
     for await (const userID of consultUsersList) {
       const UserDocPermission = new User_Document_permissions({
@@ -396,6 +413,12 @@ exports.updateDoc = async (req, res, next) => {
   });
 
   try {
+    if (newStatus === 'approved') {
+      if (oldDocumentIndex !== null && oldDocumentIndex.status === 'approved') {
+        oldDocumentIndex.status = 'obsolete';
+        await oldDocumentIndex.save();
+      }
+    }
     let respUpdateDocState;
     let respEditUsersList;
     let respConsultUsersList;
