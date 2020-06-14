@@ -105,8 +105,6 @@ exports.createDepart = catchAsync(async (req, res, next) => {
 
 // GET LIST OF ONE/ALL DEPARTMENT(s)
 exports.getDeparts = catchAsync(async (req, res, next) => {
-  console.log(req.query);
-
   if (req.query.departmentID) {
     respFind = await Department.findOne({
       where: { departmentID: req.query.departmentID },
