@@ -380,7 +380,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
 exports.updateDoc = async (req, res, next) => {
   const documentID = req.params.docID;
   let {
-    newStatus,
+    status: newStatus,
     description,
     is_public,
     is_external,
@@ -460,7 +460,7 @@ exports.updateDoc = async (req, res, next) => {
     };
     res.status(200).json({
       status: 201,
-      message: 'Document saved!',
+      message: 'Document updated!',
       data: {
         ...respObj,
       },
@@ -469,7 +469,7 @@ exports.updateDoc = async (req, res, next) => {
     console.log(error);
     res.status(404).json({
       status: 404,
-      message: 'Document not saved!',
+      message: 'Document not updated!',
       data: {
         error,
       },
