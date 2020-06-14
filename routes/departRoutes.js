@@ -7,6 +7,8 @@ const router = express.Router();
 
 router.get('/', departController.getDeparts);
 
+router.put('/:id', departController.updateDepart)
+
 router.post(
   '/create',
   [

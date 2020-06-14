@@ -8,6 +8,40 @@ const Department_Doc = require('../models/Department_Doc');
 
 const { catchAsync } = require('../util/catchAsync');
 
+exports.updateDepart = async (req, res, next) => {
+  const departmentID = req.params.id;
+  try {
+    const { departName, chief_user, description } = req.body;
+
+    const newDepartData = await Department.findByPk(departmentID);
+    newDepartData.name = departName;
+    newDepartData.chief_userID = chief_user;
+    newDepartData.description = description;
+
+    const respUpdate = await newDepartData.save();
+
+    const respObj = {
+      respUpdate,
+    };
+    res.status(200).json({
+      status: 201,
+      message: 'Department updated!',
+      data: {
+        ...respObj,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({
+      status: 404,
+      message: 'Department was not updated!',
+      data: {
+        error,
+      },
+    });
+  }
+};
+
 // MODEL DEPARTMENT
 // CREATE DEPARTMENT AND ASSOCIATE CHIEF USER TO IT AUTOMAGICALLY
 exports.createDepart = catchAsync(async (req, res, next) => {
@@ -22,6 +56,7 @@ exports.createDepart = catchAsync(async (req, res, next) => {
 
   const departName = req.body.departName;
   const chief_user = req.body.chief_user;
+  const description = req.body.description;
 
   respFind = await User_Info.findOne({ where: { userID: chief_user } });
   if (!respFind) {
@@ -34,6 +69,7 @@ exports.createDepart = catchAsync(async (req, res, next) => {
     const newDepart = new Department({
       name: departName,
       chief_userID: chief_user,
+      description,
     });
     respSave1 = await newDepart.save();
 
@@ -69,9 +105,11 @@ exports.createDepart = catchAsync(async (req, res, next) => {
 
 // GET LIST OF ONE/ALL DEPARTMENT(s)
 exports.getDeparts = catchAsync(async (req, res, next) => {
-  if (req.body.id) {
+  console.log(req.query);
+
+  if (req.query.departmentID) {
     respFind = await Department.findOne({
-      where: { departmentID: req.body.id },
+      where: { departmentID: req.query.departmentID },
     });
   } else {
     respFind = await Department.findAll();
@@ -80,13 +118,13 @@ exports.getDeparts = catchAsync(async (req, res, next) => {
   if (respFind.length == 0) {
     res.status(404).json({
       status: 404,
-      received: req.body,
+      received: req.query,
       message: 'No Departments Found',
     });
   } else {
     res.json({
       status: 201,
-      received: req.body,
+      received: req.query,
       message: 'Department(s) found!',
       data: { respFind },
     });
