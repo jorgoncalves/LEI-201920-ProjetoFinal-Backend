@@ -36,7 +36,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   const password = req.body.password;
   let respFind;
   let respSave;
-
+  let respSaveDepart = [];
   const hashedPw = await bcrypt.hash(password, 12);
   console.log('email - ', email);
   console.log('password - ', password);
@@ -48,14 +48,14 @@ exports.signup = catchAsync(async (req, res, next) => {
       status: 200,
       received: req.body,
       message: 'Email address already exists!',
-      data: { respFind },
+      data: { respFind }
     });
     console.log('respFind', respFind);
   }
   if (!respFind) {
     const newUser_Auth = new User_Auth({
       email: email,
-      password: hashedPw,
+      password: hashedPw
     });
     respSave = await newUser_Auth.save();
 
@@ -64,8 +64,32 @@ exports.signup = catchAsync(async (req, res, next) => {
       name: req.body.name,
       email: email,
       country: req.body.country,
+      country_code: req.body.country_code,
+      phone_number: req.body.phone_number
     });
     respSave_Info = await newUser_Info.save();
+
+    if (req.body.departmentList.length > 0) {
+      for await (const depart of req.body.departmentList) {
+        const departResp = await Department_User.findOne({
+          where: {
+            departmentID: depart.departmentID,
+            userID: respSave.userID
+          }
+        });
+
+        if (!departResp) {
+          console.log('true');
+          const departListUpdate = new Department_User({
+            departmentID: depart.departmentID,
+            userID: respSave.userID,
+            has_ext_access: false
+          });
+          const resp = await departListUpdate.save();
+          respSaveDepart.push(resp);
+        }
+      }
+    }
 
     res.json({
       status: 201,
@@ -75,8 +99,12 @@ exports.signup = catchAsync(async (req, res, next) => {
           respSave_Info.userID.toString(),
           respSave_Info.email,
           respSave_Info.name
-        ),
+        )
       },
+      respFind,
+      respSave,
+      respSaveDepart,
+      respSave_Info
     });
     console.log('respSave', respSave_Info);
   }
@@ -108,7 +136,7 @@ exports.login = catchAsync(async (req, res, next) => {
     error.statusCode = 401;
     throw error;
   }
-console.log(user);
+  console.log(user);
 
   res.status(200).json({
     status: 201,
@@ -120,7 +148,7 @@ console.log(user);
         user.email,
         user.name,
         user.is_admin
-      ),
-    },
+      )
+    }
   });
 });
