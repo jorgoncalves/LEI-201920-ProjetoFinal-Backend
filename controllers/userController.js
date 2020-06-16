@@ -2,7 +2,7 @@ const User_Info = require('../models/User_Info');
 const User_Auth = require('../models/User_Auth');
 const Department = require('../models/Department');
 const Department_User = require('../models/Department_User');
-
+const User_Notification = require('../models/User_Notification');
 const { catchAsync } = require('../util/catchAsync');
 
 exports.getUsers = catchAsync(async (req, res, next) => {
@@ -32,14 +32,14 @@ exports.getUser = catchAsync(async (req, res, next) => {
   const respFindDepartUser = await Department_User.findAll({
     where: { userID: userID }
   });
-  const respFindDepart = await Promise.all(
-    respFindDepartUser.map(
-      async (departUser) =>
-        await Department.findOne({
-          where: { departmentID: departUser.departmentID }
-        })
-    )
-  );
+  const respFindDepart = [];
+  for (const departUser of respFindDepartUser) {
+    const resp = await Department.findOne({
+      where: { departmentID: departUser.departmentID }
+    });
+    respFindDepart.push(resp);
+  }
+
   if (respFind) {
     res.json({
       status: 201,
@@ -69,13 +69,15 @@ exports.updateUser = async (req, res, next) => {
       profile_img_path,
       departmentList,
       deleteFromDepart,
-      has_ext_access = false
+      has_ext_access = false,
+      is_active
     } = req.body;
 
     const userInfo = await User_Info.findByPk(userID);
 
     let respSaveDepart = [];
     let respDeleteDepart = [];
+    let respSaveAuth;
     if (name) userInfo.name = name;
     if (country) userInfo.country = country;
     if (country_code) userInfo.country_code = country_code;
@@ -120,11 +122,18 @@ exports.updateUser = async (req, res, next) => {
       }
     }
 
+    if (is_active !== undefined) {
+      const userAuth = await User_Auth.findByPk(userID);
+      userAuth.is_active = is_active;
+      const resp = await userAuth.save();
+      respSaveAuth = resp;
+    }
+
     res.json({
       status: 201,
       received: req.body,
       message: 'User updated',
-      data: { newUserInfo, respSaveDepart, respDeleteDepart }
+      data: { newUserInfo, respSaveAuth, respSaveDepart, respDeleteDepart }
     });
   } catch (error) {
     console.log(error);
@@ -137,3 +146,34 @@ exports.updateUser = async (req, res, next) => {
     });
   }
 };
+
+exports.getUserNotifications = catchAsync(async (req, res, next) => {
+  const userID = req.params.id;
+  try {
+    respFind = await User_Notification.findAll({
+      where: { was_seen: false, receivingUserID: userID }
+    });
+
+    if (respFind) {
+      res.json({
+        status: 201,
+        received: req.body,
+        message: 'Notifications found',
+        data: { respFind }
+      });
+    } else {
+      res.status(404).json({
+        status: 404,
+        received: req.body,
+        message: 'No Notifications found'
+      });
+    }
+  } catch (error) {
+    res.status(404).json({
+      status: 404,
+      received: req.body,
+      received: error,
+      message: 'Error!'
+    });
+  }
+});

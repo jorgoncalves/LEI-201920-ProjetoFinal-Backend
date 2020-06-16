@@ -18,6 +18,7 @@ const {
   updateDocState,
   updateUserDocPermissions,
   updateDepartmentDoc,
+  notifyByDocState
 } = require('./docControllerFunctions/updateDoc');
 
 const { catchAsync } = require('../util/catchAsync');
@@ -43,8 +44,8 @@ exports.getDocsFS = async (req, res, next) => {
       message: 'Documents found!',
       data: {
         options: {},
-        dirs: [...respObj],
-      },
+        dirs: [...respObj]
+      }
     });
   } catch (error) {
     console.log(error);
@@ -52,8 +53,8 @@ exports.getDocsFS = async (req, res, next) => {
       status: 404,
       message: 'Document not found!',
       data: {
-        error,
-      },
+        error
+      }
     });
   }
 };
@@ -70,25 +71,25 @@ exports.getDocs = async (req, res, next) => {
       description,
       is_public,
       is_external,
-      size,
+      size
     } = req.query;
     delete req.query.status;
     let documents;
     if (status !== undefined)
       documents = await Document_Index.findAll({
-        where: { status: { [Op.or]: [status] }, ...req.query },
+        where: { status: { [Op.or]: [status] }, ...req.query }
       });
     else
       documents = await Document_Index.findAll({
-        where: { ...req.query },
+        where: { ...req.query }
       });
     const respObj = { documents };
     res.status(201).json({
       status: 201,
       message: 'Documents found!',
       data: {
-        ...respObj,
-      },
+        ...respObj
+      }
     });
   } catch (error) {
     console.log(error);
@@ -96,8 +97,8 @@ exports.getDocs = async (req, res, next) => {
       status: 404,
       message: 'Documents not found!',
       data: {
-        error,
-      },
+        error
+      }
     });
   }
 };
@@ -117,7 +118,7 @@ exports.getDocsPermissions = async (req, res, next) => {
       is_public,
       is_external,
       size,
-      userID,
+      userID
     } = req.query;
 
     console.log(req.query);
@@ -157,27 +158,28 @@ exports.getDocsPermissions = async (req, res, next) => {
           : ''
       };`,
       {
-        type: QueryTypes.SELECT,
+        type: QueryTypes.SELECT
       }
     );
-    let documents = await Promise.all(
-      await resp.map(async (doc) => {
-        const newDoc = doc;
-        const temp = await User_Info.findByPk(newDoc.approving_userID);
-        if (temp !== null) newDoc.approvingUser_Data = temp.dataValues;
-        else newDoc.approvingUser_Data = {};
 
-        return newDoc;
-      })
-    );
+    let documents = [];
+
+    for await (const doc of resp) {
+      const newDoc = doc;
+      const temp = await User_Info.findByPk(newDoc.approving_userID);
+      if (temp !== null) newDoc.approvingUser_Data = temp.dataValues;
+      else newDoc.approvingUser_Data = {};
+
+      documents.push(newDoc);
+    }
 
     const respObj = { documents };
     res.status(201).json({
       status: 201,
       message: 'Documents found!',
       data: {
-        ...respObj,
-      },
+        ...respObj
+      }
     });
   } catch (error) {
     console.log(error);
@@ -185,8 +187,8 @@ exports.getDocsPermissions = async (req, res, next) => {
       status: 404,
       message: 'Documents not found!',
       data: {
-        error,
-      },
+        error
+      }
     });
   }
 };
@@ -194,15 +196,15 @@ exports.getDocsPermissions = async (req, res, next) => {
 exports.getDocDepart = async (req, res, next) => {
   try {
     const docPermisions = await Department_Doc.findAll({
-      where: { ...req.query },
+      where: { ...req.query }
     });
     const respObj = { docPermisions };
     res.status(201).json({
       status: 201,
       message: 'Permissions found!',
       data: {
-        ...respObj,
-      },
+        ...respObj
+      }
     });
   } catch (error) {
     console.log(error);
@@ -210,8 +212,8 @@ exports.getDocDepart = async (req, res, next) => {
       status: 404,
       message: 'Something whent wrong!',
       data: {
-        error,
-      },
+        error
+      }
     });
   }
 };
@@ -234,7 +236,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
       is_external,
       editUsersList,
       consultUsersList,
-      departmentList,
+      departmentList
     } = req.body;
     const currentPath = path.join(
       `FileStorage`,
@@ -282,7 +284,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
       );
       const oldDocumentIndex = await Document_Index.findOne({
         where: { name: name },
-        order: [['created_on', 'DESC']],
+        order: [['created_on', 'DESC']]
       });
       if (oldDocumentIndex !== null && oldDocumentIndex.status !== 'approved') {
         oldDocumentIndex.status = 'obsolete';
@@ -307,7 +309,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
       description,
       is_public,
       is_external,
-      size: req.file.size,
+      size: req.file.size
     });
     const saveResp = await newDoc.save();
     const documentID_new = saveResp.documentID;
@@ -317,12 +319,12 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
             userID,
             documentID_old,
             documentID_new,
-            status,
+            status
           })
         : new Commit({
             userID,
             documentID_new,
-            status,
+            status
           });
     const respCommit = await commit.save();
 
@@ -339,7 +341,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
         documentID: documentID_new,
         userID: userID,
         type_access: 1,
-        has_ext_access: 0,
+        has_ext_access: 0
       });
       const respS = await UserDocPermission.save();
       editUsersResp.push(respS);
@@ -353,7 +355,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
         documentID: documentID_new,
         userID: userID,
         type_access: 2,
-        has_ext_access: 0,
+        has_ext_access: 0
       });
       const respS = await UserDocPermission.save();
       consultUsersResp.push(respS);
@@ -363,24 +365,43 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
     for await (const departID of departmentList) {
       const DepartmentDoc = new Department_Doc({
         documentID: documentID_new,
-        departmentID: departID,
+        departmentID: departID
       });
       const respS = await DepartmentDoc.save();
       departmentResp.push(respS);
     }
+
+    const respNotifications = [];
+    if (status !== 'pending') {
+      const userNotificationList = await User_Document_permissions.findAll({
+        where: { documentID: documentID }
+      });
+      for await (const notifiedUser of userNotificationList) {
+        const obj = {
+          documentID: documentID_new,
+          submittingUserID: userID,
+          receivingUserID: notifiedUser.userID,
+          description: description
+        };
+        const resp = await notifyByDocState(obj);
+        respNotifications.push(resp);
+      }
+    }
+
     const respObj = {
       saveResp,
       editUsersResp,
       consultUsersResp,
       departmentResp,
       respCommit,
+      respNotifications
     };
     res.status(200).json({
       status: 201,
       message: 'Document saved!',
       data: {
-        ...respObj,
-      },
+        ...respObj
+      }
     });
   } catch (error) {
     console.log(error);
@@ -388,8 +409,8 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
       status: 404,
       message: 'Document not saved!',
       data: {
-        error,
-      },
+        error
+      }
     });
   }
 });
@@ -397,6 +418,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
 exports.updateDoc = async (req, res, next) => {
   const documentID = req.params.docID;
   let {
+    userID,
     status: newStatus,
     description,
     is_public,
@@ -404,12 +426,12 @@ exports.updateDoc = async (req, res, next) => {
     approving_userID,
     editUsersList,
     consultUsersList,
-    departmentList,
+    departmentList
   } = req.body;
   const oldDocumentIndex = await Document_Index.findByPk(documentID);
   const oldDocCommit = await Commit.findOne({
     where: { documentID_new: documentID },
-    order: [['created_on', 'DESC']],
+    order: [['created_on', 'DESC']]
   });
 
   try {
@@ -428,7 +450,7 @@ exports.updateDoc = async (req, res, next) => {
       description,
       is_public,
       is_external,
-      approving_userID,
+      approving_userID
     };
     if (
       newStatus ||
@@ -475,18 +497,38 @@ exports.updateDoc = async (req, res, next) => {
           departmentList
         );
     }
+
+    const respNotifications = [];
+    if (newStatus !== 'pending') {
+      const userNotificationList = await User_Document_permissions.findAll({
+        where: { documentID: documentID }
+      });
+
+      for await (const notifiedUser of userNotificationList) {
+        const obj = {
+          documentID: documentID,
+          submittingUserID: userID,
+          receivingUserID: notifiedUser.userID,
+          description: description
+        };
+        const resp = await notifyByDocState(obj);
+        respNotifications.push(resp);
+      }
+    }
+
     const respObj = {
       respUpdateDocState,
       respEditUsersList,
       respConsultUsersList,
       respDepartmentList,
+      respNotifications
     };
     res.status(200).json({
       status: 201,
       message: 'Document updated!',
       data: {
-        ...respObj,
-      },
+        ...respObj
+      }
     });
   } catch (error) {
     console.log(error);
@@ -494,8 +536,8 @@ exports.updateDoc = async (req, res, next) => {
       status: 404,
       message: 'Document not updated!',
       data: {
-        error,
-      },
+        error
+      }
     });
   }
 };

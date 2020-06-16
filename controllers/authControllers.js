@@ -122,7 +122,9 @@ exports.login = catchAsync(async (req, res, next) => {
   console.log('Email - ', email);
   console.log('Password - ', password);
 
-  const user = await User_Auth.findOne({ where: { email: email } });
+  const user = await User_Auth.findOne({
+    where: { email: email, is_active: true }
+  });
 
   if (!user) {
     const error = new Error('Could not find a user with that email.');
