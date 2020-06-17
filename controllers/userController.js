@@ -177,3 +177,47 @@ exports.getUserNotifications = catchAsync(async (req, res, next) => {
     });
   }
 });
+
+exports.updateNotification = async (req, res, next) => {
+  const notificationID = req.params.notificationID
+  try {
+    const {
+      
+      receivingUserID,
+      submittingUserID,
+      documentID,
+      description,
+      was_seen
+    } = req.body;
+
+    if (notificationID !== undefined) {
+      const notificationUpdate = await User_Notification.findByPk(
+        notificationID
+      );
+
+      if (was_seen !== undefined) notificationUpdate.was_seen = was_seen;
+      if (description) notificationUpdate.description = description;
+
+      const respUpdateNotification = await notificationUpdate.save();
+      const respObj = {
+        respUpdateNotification
+      };
+      res.status(200).json({
+        status: 201,
+        message: 'Notification updated!',
+        data: respObj
+      });
+    } else {
+      throw Error('No notificationID provided');
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({
+      status: 404,
+      message: 'Notification not updated!',
+      data: {
+        error
+      }
+    });
+  }
+};
