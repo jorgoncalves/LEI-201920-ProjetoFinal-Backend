@@ -11,12 +11,13 @@ const { catchAsync } = require('../util/catchAsync');
 exports.updateDepart = async (req, res, next) => {
   const departmentID = req.params.id;
   try {
-    const { departName, chief_user, description } = req.body;
+    const { departName, chief_user, description, is_active } = req.body;
 
     const newDepartData = await Department.findByPk(departmentID);
     newDepartData.name = departName;
     newDepartData.chief_userID = chief_user;
     newDepartData.description = description;
+    newDepartData.is_active = is_active;
 
     const respUpdate = await newDepartData.save();
 
@@ -26,6 +27,7 @@ exports.updateDepart = async (req, res, next) => {
     res.status(200).json({
       status: 201,
       message: 'Department updated!',
+      received: req.body,
       data: {
         ...respObj
       }
@@ -35,6 +37,7 @@ exports.updateDepart = async (req, res, next) => {
     res.status(404).json({
       status: 404,
       message: 'Department was not updated!',
+      received: req.body,
       data: {
         error
       }
@@ -108,6 +111,10 @@ exports.getDeparts = catchAsync(async (req, res, next) => {
   if (req.query.departmentID) {
     respFind = await Department.findOne({
       where: { departmentID: req.query.departmentID }
+    });
+  } else if (req.query.is_active !== undefined) {
+    respFind = await Department.findAll({
+      where: { is_active: req.query.is_active }
     });
   } else {
     respFind = await Department.findAll();
@@ -206,62 +213,74 @@ exports.insertUser_Depart = catchAsync(async (req, res, next) => {
 });
 
 exports.getUserDepartColleagues = catchAsync(async (req, res, next) => {
-  const userID = req.params.id;
+  try {
+    const userID = req.params.id;
 
-  // respFindUser_Info = await User_Info.findOne({
-  //   where: { userID: userID },
-  // });
-  // respFindUser_Auth = await User_Auth.findOne({
-  //   where: { userID: userID },
-  // });
-  const respFindUserDepart = await Department_User.findAll({
-    where: { userID: userID }
-  });
-  const respDepartUsers = [];
+    // respFindUser_Info = await User_Info.findOne({
+    //   where: { userID: userID },
+    // });
+    // respFindUser_Auth = await User_Auth.findOne({
+    //   where: { userID: userID },
+    // });
 
-  for await (const userDepart of respFindUserDepart) {
-    const departInfo = await Department.findOne({
-      where: { departmentID: userDepart.departmentID }
-    });
-    const allDepartUsers = await Department_User.findAll({
-      where: { departmentID: userDepart.departmentID }
-    });
-    const userInDepartInfo = [];
-    for await (const userInDepart of allDepartUsers) {
-      const userInfo = await User_Info.findOne({
-        where: { userID: userInDepart.userID }
-      });
-      const userAuth = await User_Auth.findOne({
-        where: { userID: userInDepart.userID }
-      });
-      // console.log(userAuth);
-
-      delete userAuth.dataValues.password;
-
-      userInDepartInfo.push({
-        userInfo,
-        userAuth
-      });
+    if (req.query.is_active !== undefined) {
     }
 
-    respDepartUsers.push({
-      departInfo: { ...departInfo.dataValues, userInDepartInfo }
+    const respFindUserDepart = await Department_User.findAll({
+      where: { userID: userID }
     });
-  }
+    const respDepartUsers = [];
 
-  if (respDepartUsers) {
-    res.json({
-      status: 201,
-      received: req.body,
-      message: 'Users found in Department',
-      data: { respDepartUsers }
-    });
-    // console.log('respDepartUsers', respDepartUsers);
-  } else {
-    res.status(404).json({
-      status: 404,
-      received: req.body,
-      message: 'No Users found in this department'
-    });
+    for await (const userDepart of respFindUserDepart) {
+      const departInfo = await Department.findOne({
+        where: { departmentID: userDepart.departmentID }
+      });
+      const allDepartUsers = await Department_User.findAll({
+        where: { departmentID: userDepart.departmentID }
+      });
+      let userInDepartInfo = [];
+      for await (const userInDepart of allDepartUsers) {
+        const userInfo = await User_Info.findOne({
+          where: { userID: userInDepart.userID }
+        });
+        const userAuth = await User_Auth.findOne({
+          where: { userID: userInDepart.userID }
+        });
+        // console.log(userAuth);
+
+        delete userAuth.dataValues.password;
+
+        userInDepartInfo.push({
+          userInfo,
+          userAuth
+        });
+      }
+
+      userInDepartInfo = userInDepartInfo.filter(
+        (user) => user.userAuth.is_active === true
+      );
+      if (departInfo.is_active)
+        respDepartUsers.push({
+          departInfo: { ...departInfo.dataValues, userInDepartInfo }
+        });
+    }
+
+    if (respDepartUsers) {
+      res.json({
+        status: 201,
+        received: req.body,
+        message: 'Users found in Department',
+        data: { respDepartUsers }
+      });
+      // console.log('respDepartUsers', respDepartUsers);
+    } else {
+      res.status(404).json({
+        status: 404,
+        received: req.body,
+        message: 'No Users found in this department'
+      });
+    }
+  } catch (error) {
+    throw Error(error);
   }
 });

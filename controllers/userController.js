@@ -4,9 +4,21 @@ const Department = require('../models/Department');
 const Department_User = require('../models/Department_User');
 const User_Notification = require('../models/User_Notification');
 const { catchAsync } = require('../util/catchAsync');
+const Document_Index = require('../models/Document_Index');
 
 exports.getUsers = catchAsync(async (req, res, next) => {
-  respFind = await User_Info.findAll();
+  let respFind = [];
+  if (req.query.is_active !== undefined) {
+    const tempUser = await User_Auth.findAll({
+      where: { is_active: req.query.is_active }
+    });
+    for await (const user of tempUser) {
+      const temp = await User_Info.findByPk(user.userID);
+      respFind.push(temp);
+    }
+  } else {
+    respFind = await User_Info.findAll();
+  }
 
   if (respFind) {
     res.json({
@@ -35,9 +47,9 @@ exports.getUser = catchAsync(async (req, res, next) => {
   const respFindDepart = [];
   for (const departUser of respFindDepartUser) {
     const resp = await Department.findOne({
-      where: { departmentID: departUser.departmentID }
+      where: { departmentID: departUser.departmentID, is_active: true }
     });
-    respFindDepart.push(resp);
+    if (resp !== null) respFindDepart.push(resp);
   }
 
   if (respFind) {
@@ -88,7 +100,7 @@ exports.updateUser = async (req, res, next) => {
     const newUserInfo = await userInfo.save();
     console.log(req.body);
 
-    if (departmentList.length > 0) {
+    if (departmentList !== undefined && departmentList.length > 0) {
       for await (const depart of departmentList) {
         const departResp = await Department_User.findOne({
           where: {
@@ -110,7 +122,7 @@ exports.updateUser = async (req, res, next) => {
       }
     }
 
-    if (deleteFromDepart.length > 0) {
+    if (deleteFromDepart !== undefined && deleteFromDepart.length > 0) {
       for await (const depart of deleteFromDepart) {
         const resp = await Department_User.destroy({
           where: {
@@ -150,9 +162,26 @@ exports.updateUser = async (req, res, next) => {
 exports.getUserNotifications = catchAsync(async (req, res, next) => {
   const userID = req.params.id;
   try {
-    respFind = await User_Notification.findAll({
+    const tempNotifications = await User_Notification.findAll({
       where: { was_seen: false, receivingUserID: userID }
     });
+
+    // const respUsers = await User_Info.findAll({});
+
+    // const respDocs = []
+
+    const respFind = [];
+
+    for await (const notification of tempNotifications) {
+      const userData = await User_Info.findByPk(notification.submittingUserID);
+      const docData = await Document_Index.findByPk(notification.documentID);
+      const temp = {
+        ...notification.dataValues,
+        documentData: docData,
+        submittingUserData: userData
+      };
+      respFind.push(temp);
+    }
 
     if (respFind) {
       res.json({
@@ -169,6 +198,8 @@ exports.getUserNotifications = catchAsync(async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.log(error);
+
     res.status(404).json({
       status: 404,
       received: req.body,
@@ -179,10 +210,9 @@ exports.getUserNotifications = catchAsync(async (req, res, next) => {
 });
 
 exports.updateNotification = async (req, res, next) => {
-  const notificationID = req.params.notificationID
+  const notificationID = req.params.notificationID;
   try {
     const {
-      
       receivingUserID,
       submittingUserID,
       documentID,
