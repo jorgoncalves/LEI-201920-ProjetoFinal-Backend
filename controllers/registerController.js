@@ -19,7 +19,7 @@ exports.getRecords = async (req, res, next) => {
       tagCliente,
       tagNIF,
       tagCategoria,
-      description,
+      description
     } = req.query;
     delete req.query.tagAno;
     delete req.query.tagCliente;
@@ -35,12 +35,12 @@ exports.getRecords = async (req, res, next) => {
       records = await Record.findAll({ where: { ...req.query } });
     else
       records = await Record.findAll({
-        where: { tags: { [Op.contains]: tags }, ...req.query },
+        where: { tags: { [Op.contains]: tags }, ...req.query }
       });
 
     for await (const record of records) {
       const recordAttachments = await Attachments.findAll({
-        where: { recordID: record.recordID },
+        where: { recordID: record.recordID }
       });
       records.find(
         (rec) => rec.dataValues.recordID === record.recordID
@@ -52,8 +52,8 @@ exports.getRecords = async (req, res, next) => {
       status: 201,
       message: 'Records found!',
       data: {
-        ...respObj,
-      },
+        ...respObj
+      }
     });
   } catch (error) {
     console.log(error);
@@ -61,8 +61,8 @@ exports.getRecords = async (req, res, next) => {
       status: 404,
       message: 'Records not found!',
       data: {
-        error,
-      },
+        error
+      }
     });
   }
 };
@@ -73,11 +73,11 @@ exports.postRecord = async (req, res, next) => {
     const {
       documentID,
       submitted_by_UserID,
-      tagAno,
+      tagAno = new Date().getFullYear(),
       tagCliente,
       tagNIF,
       tagCategoria,
-      description,
+      description
     } = req.body;
     const tagsArr = [tagAno, tagCliente, tagNIF, tagCategoria];
 
@@ -85,7 +85,7 @@ exports.postRecord = async (req, res, next) => {
       documentID,
       submitted_by_UserID,
       tags: tagsArr,
-      description,
+      description
     });
     const respSaveRecord = await newRecord.save();
     const recordID = respSaveRecord.recordID;
@@ -99,7 +99,7 @@ exports.postRecord = async (req, res, next) => {
         const newAttachment = new Attachments({
           recordID,
           path,
-          name,
+          name
         });
         const respAttachmentSave = await newAttachment.save();
         respAttachmentArr.push(respAttachmentSave);
@@ -110,8 +110,8 @@ exports.postRecord = async (req, res, next) => {
       status: 201,
       message: 'Record saved!',
       data: {
-        ...respObj,
-      },
+        ...respObj
+      }
     });
   } catch (error) {
     console.log(error);
@@ -119,8 +119,8 @@ exports.postRecord = async (req, res, next) => {
       status: 404,
       message: 'Record not saved!',
       data: {
-        error,
-      },
+        error
+      }
     });
   }
 };

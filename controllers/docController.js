@@ -374,7 +374,7 @@ exports.insertDoc = catchAsync(async (req, res, next) => {
     const respNotifications = [];
     if (status !== 'pending') {
       const userNotificationList = await User_Document_permissions.findAll({
-        where: { documentID: documentID }
+        where: { documentID: documentID_new }
       });
       for await (const notifiedUser of userNotificationList) {
         const obj = {

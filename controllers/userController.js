@@ -1,3 +1,5 @@
+const bcrypt = require('bcryptjs');
+
 const User_Info = require('../models/User_Info');
 const User_Auth = require('../models/User_Auth');
 const Department = require('../models/Department');
@@ -82,20 +84,28 @@ exports.updateUser = async (req, res, next) => {
       departmentList,
       deleteFromDepart,
       has_ext_access = false,
-      is_active
+      is_active,
+      password
     } = req.body;
 
     const userInfo = await User_Info.findByPk(userID);
 
     let respSaveDepart = [];
     let respDeleteDepart = [];
-    let respSaveAuth;
+    let respSaveAuth = [];
     if (name) userInfo.name = name;
     if (country) userInfo.country = country;
     if (country_code) userInfo.country_code = country_code;
     if (phone_number) userInfo.phone_number = phone_number;
     if (user_display) userInfo.user_display = user_display;
     if (profile_img_path) userInfo.profile_img_path = profile_img_path;
+    if (password !== undefined) {
+      const userAuth = await User_Auth.findByPk(userID);
+      const hashedPw = await bcrypt.hash(password, 12);
+      userAuth.password = hashedPw;
+      const resp = userAuth.save();
+      respSaveAuth.push(resp);
+    }
 
     const newUserInfo = await userInfo.save();
     console.log(req.body);
@@ -138,7 +148,7 @@ exports.updateUser = async (req, res, next) => {
       const userAuth = await User_Auth.findByPk(userID);
       userAuth.is_active = is_active;
       const resp = await userAuth.save();
-      respSaveAuth = resp;
+      respSaveAuth.push(resp);
     }
 
     res.json({
