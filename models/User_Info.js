@@ -20,7 +20,7 @@ const User_Info = sequelize.define(
     user_display: {
       type: Sequelize.JSON,
       allowNull: false,
-      defaultValue: '{}',
+      defaultValue: '{"shortcuts":[],"quickAccess":[]}',
     },
     profile_img_path: { type: Sequelize.STRING, allowNull: true },
     created_on: {
