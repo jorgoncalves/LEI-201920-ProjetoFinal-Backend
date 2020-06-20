@@ -426,15 +426,16 @@ exports.updateDoc = async (req, res, next) => {
     approving_userID,
     editUsersList,
     consultUsersList,
-    departmentList
+    departmentList,
+    status
   } = req.body;
-  const oldDocumentIndex = await Document_Index.findByPk(documentID);
-  const oldDocCommit = await Commit.findOne({
-    where: { documentID_new: documentID },
-    order: [['created_on', 'DESC']]
-  });
-
   try {
+    const oldDocumentIndex = await Document_Index.findByPk(documentID);
+    const oldDocCommit = await Commit.findOne({
+      where: { documentID_new: documentID },
+      order: [['created_on', 'DESC']]
+    });
+
     if (newStatus === 'approved') {
       if (oldDocumentIndex !== null && oldDocumentIndex.status === 'approved') {
         oldDocumentIndex.status = 'obsolete';
@@ -460,6 +461,14 @@ exports.updateDoc = async (req, res, next) => {
       approving_userID
     )
       respUpdateDocState = await updateDocState(documentID, updateObj);
+    let commit = new Commit({
+      userID,
+      documentID_old: oldDocCommit.dataValues.documentID_old,
+      documentID_new: oldDocCommit.dataValues.documentID_new,
+      status
+    });
+    const respCommit = await commit.save();
+
     if (editUsersList) {
       editUsersList = JSON.parse(editUsersList);
       editUsersList.push(oldDocCommit.userID);
@@ -521,7 +530,8 @@ exports.updateDoc = async (req, res, next) => {
       respEditUsersList,
       respConsultUsersList,
       respDepartmentList,
-      respNotifications
+      respNotifications,
+      respCommit
     };
     res.status(200).json({
       status: 201,
@@ -546,4 +556,3 @@ exports.getDocByState = catchAsync(async (req, res, next) => {
   const { userID, docState } = req.params;
 });
 
-exports.documentOfficeLocation = catchAsync();
