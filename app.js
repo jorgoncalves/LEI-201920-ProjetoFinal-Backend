@@ -37,7 +37,9 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
+app.get('/', (req, res) => {
+  res.send('Hello world');
+});
 app.use('/auth', isExternal, authRoutes);
 app.use('/depart', isExternal, departRoutes);
 app.use('/user', isExternal, userRoutes);
@@ -55,6 +57,5 @@ app.use((error, req, res, next) => {
   const data = error.data;
   res.status(status).json({ status: status, message: message, data: data });
 });
-
-const serve = app.listen(8080);
+const serve = app.listen(process.env.PORT || 8080);
 // usar o serve para socket.io
