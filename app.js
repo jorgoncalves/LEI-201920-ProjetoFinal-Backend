@@ -1,6 +1,7 @@
 const express = require('express');
 const sequelize = require('./util/database');
 const multer = require('multer');
+const https = require('https');
 
 const app = express();
 
@@ -18,6 +19,9 @@ const commitRoutes = require('./routes/commitRoutes');
 const docLocationRoutes = require('./routes/docLocationRoutes');
 const registerRoutes = require('./routes/registerRoutes');
 // const homeRoutes = require('./routes/homeRoutes');
+
+const privateKey = fs.readFileSync('server.key');
+const certificate = fs.readFileSync('server.cert');
 
 sequelize.sync();
 
@@ -57,5 +61,7 @@ app.use((error, req, res, next) => {
   const data = error.data;
   res.status(status).json({ status: status, message: message, data: data });
 });
-const serve = app.listen(process.env.PORT || 8080);
-// usar o serve para socket.io
+// const serve = app.listen(process.env.PORT || 8080);
+        https
+            .createServer({ key: privateKey, cert: certificate }, app)
+            .listen(process.env.PORT || 8080);
