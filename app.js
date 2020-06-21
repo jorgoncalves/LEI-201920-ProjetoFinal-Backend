@@ -62,6 +62,6 @@ app.use((error, req, res, next) => {
   const data = error.data;
   res.status(status).json({ status: status, message: message, data: data });
 });
-const serve = app.listen(process.env.PORT || 8080);
+const serve = app.listen(8080);
 // https.createServer({ key: privateKey, cert: certificate }, app).listen(8080);
 console.log('Connected ate ' + new Date().toLocaleString());
