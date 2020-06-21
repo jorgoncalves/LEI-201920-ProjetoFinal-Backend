@@ -1,5 +1,6 @@
 const express = require('express');
 const sequelize = require('./util/database');
+const fs = require('fs');
 const multer = require('multer');
 const https = require('https');
 
@@ -62,6 +63,6 @@ app.use((error, req, res, next) => {
   res.status(status).json({ status: status, message: message, data: data });
 });
 // const serve = app.listen(process.env.PORT || 8080);
-        https
-            .createServer({ key: privateKey, cert: certificate }, app)
-            .listen(process.env.PORT || 8080);
+https
+  .createServer({ key: privateKey, cert: certificate }, app)
+  .listen(process.env.PORT || 8080);
