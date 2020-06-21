@@ -12,7 +12,7 @@ exports.getFile = async (req, res, next) => {
     console.log(req.query);
 
     let { path } = req.query;
-    path = pathJoin.join.apply(null, temp.split('\\'));
+    path = pathJoin.join.apply(null, path.split('\\'));
     const file = fs.readFileSync(path);
     // res.setHeader('Contet-Disposition', 'attachment; filename=12354');
 
