@@ -21,8 +21,8 @@ const docLocationRoutes = require('./routes/docLocationRoutes');
 const registerRoutes = require('./routes/registerRoutes');
 // const homeRoutes = require('./routes/homeRoutes');
 
-const privateKey = fs.readFileSync('server.key');
-const certificate = fs.readFileSync('server.cert');
+// const privateKey = fs.readFileSync('server.key');
+// const certificate = fs.readFileSync('server.cert');
 
 sequelize.sync();
 
@@ -62,6 +62,6 @@ app.use((error, req, res, next) => {
   const data = error.data;
   res.status(status).json({ status: status, message: message, data: data });
 });
-// const serve = app.listen(process.env.PORT || 8080);
-https.createServer({ key: privateKey, cert: certificate }, app).listen(8080);
+const serve = app.listen(process.env.PORT || 8080);
+// https.createServer({ key: privateKey, cert: certificate }, app).listen(8080);
 console.log('Connected ate ' + new Date().toLocaleString());
