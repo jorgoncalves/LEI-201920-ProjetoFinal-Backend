@@ -13,7 +13,7 @@ exports.createToken = (ip, id, email, name, isAdmin) => {
       isAdmin,
     },
     jwtSecret,
-    { expiresIn: '1h' }
+    // { expiresIn: '1h' }
   );
   return token;
 };
